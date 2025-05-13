@@ -1,63 +1,18 @@
-import 'dart:convert';
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class StudentListPage extends StatefulWidget {
   const StudentListPage({super.key});
 
   @override
-  _StudentListPageState createState() => _StudentListPageState();
+  State<StudentListPage> createState() => _StudentListPageState();
 }
 
 class _StudentListPageState extends State<StudentListPage> {
   List<Student> students = [];
-  bool isLoading = true;
-  String errorMessage = '';
-
-  String getBaseUrl() {
-    if (kIsWeb) {
-      return 'http://localhost:3000'; // for Flutter Web
-    } else if (Platform.isAndroid) {
-      return 'http://10.0.2.2:3000'; // for Android emulator
-    } else {
-      return 'http://localhost:3000'; // for iOS or desktop
-    }
-  }
-
-  // Fetch students from backend
-  Future<void> fetchStudents() async {
-    setState(() {
-      isLoading = true;
-      errorMessage = '';
-    });
-
-    try {
-      final response =
-          await http.get(Uri.parse("${getBaseUrl()}/api/students"));
-
-      if (response.statusCode == 200) {
-        List<dynamic> data = jsonDecode(response.body);
-        setState(() {
-          students =
-              data.map((studentData) => Student.fromJson(studentData)).toList();
-        });
-      } else {
-        setState(() {
-          errorMessage = 'Failed to load students. Please try again later.';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        errorMessage = 'Error fetching data: $e';
-      });
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
+  List<Student> filteredStudents = [];
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -65,79 +20,98 @@ class _StudentListPageState extends State<StudentListPage> {
     fetchStudents();
   }
 
+  Future<void> fetchStudents() async {
+    try {
+      final response = await http.get(Uri.parse("http://10.0.2.2:3000/api/students"));
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonData = json.decode(response.body);
+        setState(() {
+          students = jsonData.map((json) => Student.fromJson(json)).toList();
+          filteredStudents = students;
+        });
+      } else {
+        throw Exception("Failed to load students");
+      }
+    } catch (e) {
+      print("Error fetching students: $e");
+    }
+  }
+
+  void _deleteStudent(int id) async {
+    try {
+      final response = await http.delete(Uri.parse("http://10.0.2.2:3000/api/students/$id"));
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Student deleted successfully")),
+        );
+        fetchStudents();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to delete student")),
+        );
+      }
+    } catch (e) {
+      print("Error deleting student: $e");
+    }
+  }
+
+  void _searchStudents(String query) {
+    final filtered = students.where((student) =>
+      student.name.toLowerCase().contains(query.toLowerCase()) ||
+      student.department.toLowerCase().contains(query.toLowerCase()) ||
+      student.guardianName.toLowerCase().contains(query.toLowerCase())
+    ).toList();
+
+    setState(() {
+      filteredStudents = filtered;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Student List"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: fetchStudents,
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _searchStudents,
+              decoration: const InputDecoration(
+                labelText: "Search",
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.search),
+              ),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: filteredStudents.length,
+              itemBuilder: (context, index) {
+                final student = filteredStudents[index];
+                return Card(
+                  margin: const EdgeInsets.all(8),
+                  child: ListTile(
+                    title: Text(student.name),
+                    subtitle: Text("Department: ${student.department}\nPhone: ${student.phone}"),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => _deleteStudent(student.id),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : errorMessage.isNotEmpty
-              ? Center(child: Text(errorMessage))
-              : RefreshIndicator(
-                  onRefresh: fetchStudents,
-                  child: students.isEmpty
-                      ? const Center(child: Text('No students found.'))
-                      : ListView.builder(
-                          itemCount: students.length,
-                          itemBuilder: (context, index) {
-                            return StudentListTile(student: students[index]);
-                          },
-                        ),
-                ),
     );
   }
 }
 
-class StudentListTile extends StatelessWidget {
-  final Student student;
-
-  const StudentListTile({super.key, required this.student});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.all(8),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(12),
-        leading: CircleAvatar(
-          radius: 30,
-          backgroundColor: Colors.grey[300],
-          backgroundImage: student.profileImage != null &&
-                  student.profileImage!.isNotEmpty
-              ? NetworkImage(student.profileImage!)
-              : const AssetImage('assets/default-profile.png')
-                  as ImageProvider,
-        ),
-        title: Text(student.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("ID: ${student.id}"),
-            Text("Department: ${student.department}"),
-            Text("Phone: ${student.phone}"),
-            Text("Email: ${student.email}"),
-            Text("Address: ${student.address}"),
-            Text("DOB: ${student.dob}"),
-            Text("Gender: ${student.gender}"),
-            Text("Guardian: ${student.guardianName}"),
-            Text("Guardian Phone: ${student.guardianPhone}"),
-          ],
-        ),
-        isThreeLine: true,
-      ),
-    );
-  }
-}
-
-// Model class
 class Student {
   final int id;
   final String name;
@@ -167,16 +141,16 @@ class Student {
 
   factory Student.fromJson(Map<String, dynamic> json) {
     return Student(
-      id: json['id'],
-      name: json['name'],
-      department: json['department'],
-      phone: json['phone'],
-      email: json['email'],
-      address: json['address'],
-      dob: json['dob'],
-      gender: json['gender'],
-      guardianName: json['guardianName'],
-      guardianPhone: json['guardianPhone'],
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      department: json['department'] ?? '',
+      phone: json['phone'] ?? '',
+      email: json['email'] ?? '',
+      address: json['address'] ?? '',
+      dob: json['dob'] ?? '',
+      gender: json['gender'] ?? '',
+      guardianName: json['guardianName'] ?? '',
+      guardianPhone: json['guardianPhone'] ?? '',
       profileImage: json['profileImage'],
     );
   }

@@ -1,25 +1,25 @@
+// app.js
 const express = require('express');
-const dotenv = require('dotenv');
+const cors = require('cors');
 const bodyParser = require('body-parser');
+const studentRoutes = require('./routes/studentRoutes');
 const path = require('path');
-const cors = require('cors');  // Import CORS
 
-dotenv.config();
 const app = express();
 
-// Enable CORS for all routes
-app.use(cors()); // This allows all domains, you can restrict to your frontend URL later if needed.
-
-// If you want to restrict to a specific frontend URL (e.g., localhost:3000), use:
-// app.use(cors({ origin: 'http://localhost:3000' }));
-
+app.use(cors());
 app.use(bodyParser.json());
-app.use('/qrcodes', express.static(path.join(__dirname, 'public/qrcodes')));
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// Routes
-app.use('/api/student', require('./routes/studentRoutes'));
-app.use('/api/admin', require('./routes/adminRoutes'));
-app.use('/api/security', require('./routes/securityRoutes'));
+// Serve static files (uploads)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// ✅ Root test route
+app.get('/', (req, res) => {
+  res.send('🎉 API is running. Use /api/students to POST student data.');
+});
+
+// Use student routes
+app.use('/api', studentRoutes);
+
+module.exports = app;

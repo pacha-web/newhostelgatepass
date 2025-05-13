@@ -2,8 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const router = express.Router();
-const db = require('../uploads/db');
-
+const db = require('../models/db');
 
 // Multer setup
 const storage = multer.diskStorage({
@@ -14,19 +13,21 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Add student
-router.post('/students', upload.single('profileImage'), (req, res) => {
+router.post('/add-student', upload.single('profileImage'), (req, res) => {
+  console.log("POST /api/add-student hit");
   const {
     name, dob, department, address, phone,
-    fatherName, motherName, username, password
+    gender, fatherName, motherName, username, password
   } = req.body;
 
   const profileImage = req.file ? `/uploads/${req.file.filename}` : null;
 
   const sql = `INSERT INTO students 
-    (name, dob, department, address, phone, fatherName, motherName, username, password, profileImage)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    (name, dob, department, address, phone, gender, fatherName, motherName, username, password, profileImage)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-  db.query(sql, [name, dob, department, address, phone, fatherName, motherName, username, password, profileImage],
+  db.query(sql,
+    [name, dob, department, address, phone, gender, fatherName, motherName, username, password, profileImage],
     (err, result) => {
       if (err) {
         console.error("Insert error:", err);
@@ -38,7 +39,7 @@ router.post('/students', upload.single('profileImage'), (req, res) => {
 });
 
 // Get all students
-router.get('/students', (req, res) => {
+router.get('/add-student', (req, res) => {
   db.query('SELECT * FROM students', (err, results) => {
     if (err) {
       return res.status(500).json({ error: "Database error" });

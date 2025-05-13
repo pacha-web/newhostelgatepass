@@ -19,6 +19,7 @@ exports.addStudent = (req, res) => {
     department,
     address,
     phone,
+    gender,
     fatherName,
     motherName,
     username,
@@ -29,13 +30,13 @@ exports.addStudent = (req, res) => {
 
   const query = `
     INSERT INTO students
-    (name, dob, department, address, phone, fatherName, motherName, username, password, profileImage)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (name, dob, department, address, phone, gender, fatherName, motherName, username, password, profileImage)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.query(
     query,
-    [name, dob, department, address, phone, fatherName, motherName, username, password, profileImage],
+    [name, dob, department, address, phone, gender, fatherName, motherName, username, password, profileImage],
     (err, result) => {
       if (err) {
         console.error('Error adding student:', err);
