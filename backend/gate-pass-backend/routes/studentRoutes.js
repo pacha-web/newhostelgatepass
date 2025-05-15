@@ -15,19 +15,20 @@ const upload = multer({ storage });
 // Add student
 router.post('/add-student', upload.single('profileImage'), (req, res) => {
   console.log("POST /api/add-student hit");
+
   const {
     name, dob, department, address, phone,
-    gender, fatherName, motherName, username, password
+    gender, guardianName, guardianPhNo, username, password
   } = req.body;
 
   const profileImage = req.file ? `/uploads/${req.file.filename}` : null;
 
-  const sql = `INSERT INTO students 
-    (name, dob, department, address, phone, gender, fatherName, motherName, username, password, profileImage)
+  const   query  = `INSERT INTO students 
+    (name, dob, department, address, phone, gender, guardianName, guardianPhNo, username, password, profileImage)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-  db.query(sql,
-    [name, dob, department, address, phone, gender, fatherName, motherName, username, password, profileImage],
+  db.query(query,
+    [name, dob, department, address, phone, gender, guardianName, guardianPhNo, username, password, profileImage],
     (err, result) => {
       if (err) {
         console.error("Insert error:", err);
@@ -39,12 +40,24 @@ router.post('/add-student', upload.single('profileImage'), (req, res) => {
 });
 
 // Get all students
-router.get('/add-student', (req, res) => {
+router.get('/students', (req, res) => {
   db.query('SELECT * FROM students', (err, results) => {
     if (err) {
       return res.status(500).json({ error: "Database error" });
     }
     res.status(200).json(results);
+  });
+});
+router.delete('/students/:id', (req, res) => {
+  const studentId = req.params.id;
+  const query = 'DELETE FROM students WHERE id = ?';
+
+  db.query(query, [studentId], (err, result) => {
+    if (err) {
+      console.error('Error deleting student:', err);
+      return res.status(500).json({ error: 'Failed to delete student' });
+    }
+    res.json({ message: 'Student deleted successfully' });
   });
 });
 

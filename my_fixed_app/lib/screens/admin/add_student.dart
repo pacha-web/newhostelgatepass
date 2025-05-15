@@ -22,7 +22,6 @@ class _AddStudentPageState extends State<AddStudentPage> {
   final _departmentController = TextEditingController();
   final _addressController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _emailController = TextEditingController();
   final _genderController = TextEditingController();
   final _guardianNameController = TextEditingController();
   final _guardianPhoneController = TextEditingController();
@@ -52,7 +51,7 @@ class _AddStudentPageState extends State<AddStudentPage> {
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
-    var uri = Uri.parse("http://192.168.13.144:5000/api/students");
+    var uri = Uri.parse("http://192.168.13.144:5000/api/add-student");
     var request = http.MultipartRequest('POST', uri);
 
     request.fields['name'] = _nameController.text;
@@ -60,10 +59,9 @@ class _AddStudentPageState extends State<AddStudentPage> {
     request.fields['department'] = _departmentController.text;
     request.fields['address'] = _addressController.text;
     request.fields['phone'] = _phoneController.text;
-    request.fields['email'] = _emailController.text;
     request.fields['gender'] = _genderController.text;
     request.fields['guardianName'] = _guardianNameController.text;
-    request.fields['guardianPhone'] = _guardianPhoneController.text;
+    request.fields['guardianPhNo'] = _guardianPhoneController.text;
     request.fields['username'] = _usernameController.text;
     request.fields['password'] = _passwordController.text;
 
@@ -74,18 +72,28 @@ class _AddStudentPageState extends State<AddStudentPage> {
       ));
     }
 
+    try {
     var response = await request.send();
+
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Student successfully added!')),
       );
       _clearForm();
     } else {
+      final responseBody = await response.stream.bytesToString();
+      print("Server error response: $responseBody");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to add student.')),
       );
     }
+  } catch (e) {
+    print("Network or server error: $e");
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('An error occurred. Please try again.')),
+    );
   }
+}
 
   void _clearForm() {
     _nameController.clear();
@@ -93,7 +101,6 @@ class _AddStudentPageState extends State<AddStudentPage> {
     _departmentController.clear();
     _addressController.clear();
     _phoneController.clear();
-    _emailController.clear();
     _genderController.clear();
     _guardianNameController.clear();
     _guardianPhoneController.clear();
@@ -103,7 +110,7 @@ class _AddStudentPageState extends State<AddStudentPage> {
       _profileImage = null;
     });
   }
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -133,7 +140,6 @@ class _AddStudentPageState extends State<AddStudentPage> {
               _buildTextField(_departmentController, "Department"),
               _buildTextField(_addressController, "Address"),
               _buildTextField(_phoneController, "Phone Number", keyboardType: TextInputType.phone),
-              _buildTextField(_emailController, "Email", keyboardType: TextInputType.emailAddress),
               _buildTextField(_genderController, "Gender"),
               _buildTextField(_guardianNameController, "Guardian's Name"),
               _buildTextField(_guardianPhoneController, "Guardian's Phone", keyboardType: TextInputType.phone),

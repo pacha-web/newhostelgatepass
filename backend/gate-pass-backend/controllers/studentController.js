@@ -8,7 +8,16 @@ exports.getAllStudents = (req, res) => {
       console.error('Error fetching students:', err);
       return res.status(500).json({ error: 'Failed to fetch students' });
     }
-    res.json({ students: results });
+
+    // Ensure profileImage includes '/uploads/' prefix if not already
+    const updatedResults = results.map(student => {
+      if (student.profileImage && !student.profileImage.startsWith('/uploads/')) {
+        student.profileImage = `/uploads/${student.profileImage}`;
+      }
+      return student;
+    });
+
+    res.json(updatedResults); // 🔥 Send flat array instead of { students: [...] }
   });
 };
 
@@ -20,23 +29,23 @@ exports.addStudent = (req, res) => {
     address,
     phone,
     gender,
-    fatherName,
-    motherName,
+    guardianName,
+    guardianPhNo,
     username,
     password
   } = req.body;
 
-  const profileImage = req.file ? `/uploads/${req.file.filename}` : null;
+  const profileImage = req.file ? req.file.filename : null;
 
   const query = `
     INSERT INTO students
-    (name, dob, department, address, phone, gender, fatherName, motherName, username, password, profileImage)
+    (name, dob, department, address, phone, gender, guardianName, guardianPhNo, username, password, profileImage)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.query(
     query,
-    [name, dob, department, address, phone, gender, fatherName, motherName, username, password, profileImage],
+    [name, dob, department, address, phone, gender, guardianName, guardianPhNo, username, password, profileImage],
     (err, result) => {
       if (err) {
         console.error('Error adding student:', err);
