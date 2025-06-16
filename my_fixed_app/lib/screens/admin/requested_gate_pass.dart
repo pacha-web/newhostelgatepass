@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class RequestedGatePass extends StatefulWidget {
   const RequestedGatePass({super.key});
@@ -17,43 +19,53 @@ class _RequestedGatePassState extends State<RequestedGatePass> {
     fetchRequests();
   }
 
-  // Replace this with actual backend call
   Future<void> fetchRequests() async {
-    await Future.delayed(const Duration(seconds: 2)); // Simulating network delay
-
-    // Sample data - replace with backend response
-    setState(() {
-      _requests = [
-        {
-          'studentName': 'John Doe',
-          'reason': 'Medical Appointment',
-          'date': '2025-04-13',
-          'status': 'Pending',
-        },
-        {
-          'studentName': 'Alice Smith',
-          'reason': 'Family Visit',
-          'date': '2025-04-12',
-          'status': 'Pending',
-        },
-      ];
-      _isLoading = false;
-    });
+    try {
+      final response = await http.get(Uri.parse("http://192.168.13.144:5000/api/requests"));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          _requests = data.map((item) => {
+            'id': item['id'],
+            'studentName': item['name'],
+            'reason': item['reason'],
+            'date': item['createdAt'].substring(0, 10),
+            'status': item['status'],
+          }).toList();
+          _isLoading = false;
+        });
+      } else {
+        throw Exception("Failed to load data");
+      }
+    } catch (e) {
+      print("Error fetching requests: $e");
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
-  void approveRequest(int index) {
-    setState(() {
-      _requests[index]['status'] = 'Approved';
-    });
-    // Send status update to backend here
+  void updateRequestStatus(int index, String newStatus) async {
+    final id = _requests[index]['id'];
+    final response = await http.put(
+      Uri.parse("http://192.168.13.144:5000/api/requests/$id/status"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({'status': newStatus}),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        _requests[index]['status'] = newStatus;
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to update status')),
+      );
+    }
   }
 
-  void rejectRequest(int index) {
-    setState(() {
-      _requests[index]['status'] = 'Rejected';
-    });
-    // Send status update to backend here
-  }
+  void approveRequest(int index) => updateRequestStatus(index, 'Approved');
+  void rejectRequest(int index) => updateRequestStatus(index, 'Rejected');
 
   @override
   Widget build(BuildContext context) {
@@ -64,6 +76,8 @@ class _RequestedGatePassState extends State<RequestedGatePass> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
+        backgroundColor: const Color.fromARGB(255, 23, 16, 161),
+        foregroundColor: Colors.white,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

@@ -3,6 +3,11 @@ const multer = require('multer');
 const path = require('path');
 const router = express.Router();
 const db = require('../models/db');
+// Add at the top along with other imports
+const studentController = require('../controllers/studentController');
+
+// Add this after existing routes
+router.post('/login', studentController.loginStudent);
 
 // Multer setup
 const storage = multer.diskStorage({
@@ -60,5 +65,7 @@ router.delete('/students/:id', (req, res) => {
     res.json({ message: 'Student deleted successfully' });
   });
 });
+
+router.post('/requests', studentController.requestGatePass);
 
 module.exports = router;

@@ -18,7 +18,7 @@ class _GatePassRequestState extends State<GatePassRequest> {
   final returnController = TextEditingController();
 
   Future<void> submitRequest() async {
-    final url = Uri.parse("http://your-server-ip:3000/api/requests"); // CHANGE THIS!
+    final url = Uri.parse("http://192.168.13.144:5000/api/requests");
 
     final response = await http.post(
       url,
@@ -58,27 +58,15 @@ class _GatePassRequestState extends State<GatePassRequest> {
       ),
       body: Container(
         padding: const EdgeInsets.all(20.0),
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFF8F9FA), Colors.white],
-          ),
-        ),
         child: ListView(
           children: [
             _buildFormField("Full Name", Icons.person_outline, nameController),
-            const SizedBox(height: 16),
             _buildFormField("Roll Number", Icons.numbers_outlined, rollController),
-            const SizedBox(height: 16),
             _buildFormField("Department", Icons.school_outlined, deptController),
-            const SizedBox(height: 16),
             _buildFormField("Reason for Leave", Icons.note_outlined, reasonController, maxLines: 3),
-            const SizedBox(height: 16),
             _buildFormField("Departure Time", Icons.access_time_outlined, departureController),
-            const SizedBox(height: 16),
             _buildFormField("Return Time", Icons.access_time_outlined, returnController),
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: submitRequest,
               style: ElevatedButton.styleFrom(
@@ -98,19 +86,17 @@ class _GatePassRequestState extends State<GatePassRequest> {
   }
 
   Widget _buildFormField(String label, IconData icon, TextEditingController controller, {int maxLines = 1}) {
-    return TextFormField(
-      controller: controller,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: Colors.grey[600]),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey[400]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color.fromARGB(255, 21, 14, 153)),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: TextFormField(
+        controller: controller,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       ),
     );

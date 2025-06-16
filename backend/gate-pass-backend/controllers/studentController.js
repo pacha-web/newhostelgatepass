@@ -9,7 +9,6 @@ exports.getAllStudents = (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch students' });
     }
 
-    // Ensure profileImage includes '/uploads/' prefix if not already
     const updatedResults = results.map(student => {
       if (student.profileImage && !student.profileImage.startsWith('/uploads/')) {
         student.profileImage = `/uploads/${student.profileImage}`;
@@ -17,7 +16,7 @@ exports.getAllStudents = (req, res) => {
       return student;
     });
 
-    res.json(updatedResults); // 🔥 Send flat array instead of { students: [...] }
+    res.json(updatedResults);
   });
 };
 
@@ -54,4 +53,42 @@ exports.addStudent = (req, res) => {
       res.json({ message: 'Student added successfully', studentId: result.insertId });
     }
   );
+};
+
+exports.loginStudent = (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ message: 'Username and password are required' });
+  }
+
+  const query = 'SELECT * FROM students WHERE username = ? AND password = ?';
+
+  db.query(query, [username, password], (err, results) => {
+    if (err) {
+      console.error('Login error:', err);
+      return res.status(500).json({ error: 'Database error during login' });
+    }
+
+    if (results.length === 0) {
+      return res.status(401).json({ message: 'Invalid username or password' });
+    }
+
+    const student = results[0];
+    delete student.password; // Remove sensitive info before sending
+
+    res.status(200).json({ message: 'Login successful', student });
+  });
+};
+const model = require('../models/gatePassModel');
+
+exports.requestGatePass = (req, res) => {
+  const data = req.body;
+  model.insertGatePassRequest(data, (err, result) => {
+    if (err) {
+      console.error('Error submitting gate pass:', err);
+      return res.status(500).json({ error: 'Failed to submit request' });
+    }
+    res.json({ message: 'Gate pass request submitted', id: result.insertId });
+  });
 };

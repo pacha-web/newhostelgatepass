@@ -46,7 +46,7 @@ class SplashScreen extends StatelessWidget {
           Column(
             children: [
               Text(
-                'EXPLORA',
+                'ROCKBOYS',
                 style: TextStyle(
                   color: Colors.blue[800],
                   fontSize: 32,
@@ -56,7 +56,7 @@ class SplashScreen extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                '- IF NOT NOW, WHEN? -',
+                '-HOSTEL-',
                 style: TextStyle(
                   color: Colors.blueGrey,
                   fontSize: 14,
@@ -83,7 +83,7 @@ class SplashScreen extends StatelessWidget {
 
               const SizedBox(height: 10),
               Text(
-                'SIGN IN',
+                'CLICK IT TO ENTER',
                 style: TextStyle(
                   color: Colors.grey[400],
                   fontSize: 14,

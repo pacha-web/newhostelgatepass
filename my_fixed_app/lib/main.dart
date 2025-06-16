@@ -68,10 +68,22 @@ final GoRouter _router = GoRouter(
       path: '/qr-scanner',
       builder: (context, state) => const QRScannerPage(),
     ),
-    GoRoute(
-      path: '/student-home',
-      builder: (context, state) => const StudentHomeScreen(),
-    ),
+   GoRoute(
+  path: '/student-home',
+  builder: (context, state) {
+    final extra = state.extra as Map<String, dynamic>?;
+
+    final studentName = extra?['studentName'] ?? 'Student';
+    final profileImageUrl = extra?['profileImageUrl'] ?? '';
+
+    return StudentHomeScreen(
+      studentName: studentName,
+      profileImageUrl: profileImageUrl,
+    );
+  },
+),
+
+
     GoRoute(
       path: '/student-list',
       builder: (context, state) => const StudentListPage(),

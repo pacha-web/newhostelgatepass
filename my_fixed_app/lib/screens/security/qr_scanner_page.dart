@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:http/http.dart' as http;
 
 class QRScannerPage extends StatefulWidget {
   const QRScannerPage({super.key});
@@ -9,63 +11,126 @@ class QRScannerPage extends StatefulWidget {
 
 class _QRScannerPageState extends State<QRScannerPage> {
   String scannedData = 'Scan a QR code to get data';
+  bool isScanning = true;
+  bool isLoading = false;
 
-  void _simulateScan() {
-    // Simulate a QR code scan result (replace with real scanner later)
-    setState(() {
-      scannedData = 'Student Name: John Doe\nGate Pass ID: GP12345';
-    });
+  Future<void> _handleStatus(String status) async {
+    if (scannedData == 'Scan a QR code to get data') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please scan a QR code first')),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://your-backend-url.com/api/updateStatus'),
+        body: {
+          'qrData': scannedData,
+          'status': status,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Marked as $status')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update status')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
 
-  void _handleStatus(String status) {
-    // Handle backend call or logic here
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Marked as $status')),
-    );
+  void _resetScan() {
+    setState(() {
+      scannedData = 'Scan a QR code to get data';
+      isScanning = true;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('QR Scanner - Security')),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 30),
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              Expanded(
+                flex: 4,
+                child: MobileScanner(
+                  controller: MobileScannerController(
+                    detectionSpeed: DetectionSpeed.noDuplicates,
+                  ),
+                  onDetect: (BarcodeCapture capture) {
+                    final List<Barcode> barcodes = capture.barcodes;
+                    if (barcodes.isNotEmpty) {
+                      final data = barcodes.first.rawValue;
+                      if (data != null && isScanning) {
+                        setState(() {
+                          scannedData = data;
+                          isScanning = false;
+                        });
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Scanned: $data')),
+                        );
+                      }
+                    }
+                  },
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        scannedData,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _statusButton('In', Colors.green),
+                          _statusButton('Out', Colors.red),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      TextButton(
+                        onPressed: _resetScan,
+                        child: const Text('Scan Another QR'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (isLoading)
             Container(
-              height: 250,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color.fromARGB(255, 13, 48, 174), width: 2),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                scannedData,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 18),
-              ),
+              color: Colors.black45,
+              child: const Center(child: CircularProgressIndicator()),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: _simulateScan,
-              icon: const Icon(Icons.qr_code_scanner),
-              label: const Text('Scan QR Code'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              ),
-            ),
-            const SizedBox(height: 30),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _statusButton('In', Colors.green),
-                _statusButton('Out', Colors.red),
-              ],
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }

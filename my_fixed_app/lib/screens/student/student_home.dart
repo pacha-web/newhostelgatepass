@@ -1,24 +1,41 @@
+// student_home.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'gatepass_request.dart';
 import 'view_requests.dart';
 
 class StudentHomeScreen extends StatelessWidget {
-  const StudentHomeScreen({super.key});
+  final String studentName;
+  final String profileImageUrl;
+
+  const StudentHomeScreen({
+    super.key,
+    required this.studentName,
+    required this.profileImageUrl,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Student Dashboard',
-          style: TextStyle(color: Colors.white),
-        ),
         backgroundColor: const Color.fromARGB(255, 21, 15, 135),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/signin'), // ✅ Back to Universal Sign-In
+          onPressed: () => context.go('/signin'),
         ),
+        title: Center(
+          child: Text(
+            studentName,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+        actions: [
+          CircleAvatar(
+            backgroundImage: NetworkImage(profileImageUrl),
+            radius: 18,
+          ),
+          const SizedBox(width: 12),
+        ],
       ),
       body: Container(
         padding: const EdgeInsets.all(20.0),
@@ -58,33 +75,36 @@ class StudentHomeScreen extends StatelessWidget {
   }
 
   Widget _buildFeatureCard(BuildContext context, String title, IconData icon, VoidCallback onTap) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Row(
-            children: [
-              Icon(icon, size: 40, color: const Color(0xFF6C63FF)),
-              const SizedBox(width: 20),
-              Text(
+  return Card(
+    elevation: 4,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Row(
+          children: [
+            Icon(icon, size: 40, color: const Color(0xFF6C63FF)),
+            const SizedBox(width: 20),
+            // Wrap title in Expanded to prevent overflow
+            Expanded(
+              child: Text(
                 title,
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const Spacer(),
-              const Icon(Icons.chevron_right, size: 30),
-            ],
-          ),
+            ),
+            const Icon(Icons.chevron_right, size: 30),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
 }

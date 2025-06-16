@@ -1,26 +1,54 @@
 const db = require('./db');
 
-exports.createGatePass = (data, callback) => {
-  const sql = 'INSERT INTO gate_pass SET ?';
-  db.query(sql, data, callback);
+// Get all gate pass requests
+exports.getAllRequests = (callback) => {
+  const query = 'SELECT * FROM gate_pass_requests';
+  db.query(query, (err, results) => {
+    if (err) return callback(err);
+    callback(null, results);
+  });
 };
 
+// Update status
 exports.updateGatePassStatus = (id, status, callback) => {
-  const sql = 'UPDATE gate_pass SET status = ? WHERE id = ?';
-  db.query(sql, [status, id], callback);
+  const query = 'UPDATE gate_pass_requests SET status = ? WHERE id = ?';
+  db.query(query, [status, id], (err, result) => {
+    if (err) return callback(err);
+    callback(null, result);
+  });
 };
 
-exports.getApprovedGatePasses = callback => {
-  const sql = 'SELECT * FROM gate_pass WHERE status = "approved"';
-  db.query(sql, callback);
+
+// Get only approved requests
+exports.getApprovedGatePasses = (callback) => {
+  const query = 'SELECT * FROM gate_pass_requests WHERE status = "Approved"';
+  db.query(query, (err, results) => {
+    if (err) return callback(err);
+    callback(null, results);
+  });
 };
 
-exports.insertInOutLog = (student_id, status, callback) => {
-  const sql = 'INSERT INTO logs (student_id, status, timestamp) VALUES (?, ?, NOW())';
-  db.query(sql, [student_id, status], callback);
-};
+// Insert a new request
+exports.insertGatePassRequest = (data, callback) => {
+  const {
+    name,
+    roll,
+    department,
+    reason,
+    departureTime,
+    returnTime,
+    status = 'Pending'
+  } = data;
 
-exports.getHistory = callback => {
-  const sql = 'SELECT * FROM logs ORDER BY timestamp DESC';
-  db.query(sql, callback);
+  const query = `
+    INSERT INTO gate_pass_requests (name, roll, department, reason, departureTime, returnTime, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  const values = [name, roll, department, reason, departureTime, returnTime, status];
+
+  db.query(query, values, (err, result) => {
+    if (err) return callback(err);
+    callback(null, result);
+  });
 };

@@ -4,7 +4,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const studentRoutes = require('./routes/studentRoutes');
 const path = require('path');
-
+const adminRoutes = require('./routes/adminRoutes');
 const app = express();
 
 app.use(cors());
@@ -19,7 +19,14 @@ app.get('/', (req, res) => {
   res.send('🎉 API is running. Use /api/students to POST student data.');
 });
 
-// Use student routes
+// Use student routesconst adminRoutes = require('./routes/adminRoutes'); // <-- Add this at the top
+
+// Use both student and admin routes
+ // <-- Add this at the top
+
+// Use both student and admin routes
 app.use('/api', studentRoutes);
+app.use('/api', adminRoutes); // <-- This is the missing part
+
 
 module.exports = app;
