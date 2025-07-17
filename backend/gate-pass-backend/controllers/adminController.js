@@ -23,3 +23,13 @@ exports.viewAllRequests = (req, res) => {
   });
 };
 
+// adminController.js
+exports.updateGatePassStatus = (req, res) => {
+  const id = req.params.id;
+  const { status } = req.body;
+  model.updateGatePassStatus(id, status, (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: `Status changed to ${status}` });
+  });
+};
+

@@ -9,13 +9,15 @@ exports.getAllRequests = (callback) => {
       gpr.departureTime, gpr.returnTime, gpr.status, gpr.createdAt,
       s.profileImage
     FROM gate_pass_requests gpr
-    JOIN students s ON gpr.roll = s.roll
+    LEFT JOIN students s ON TRIM(LOWER(gpr.roll)) = TRIM(LOWER(s.roll))
+    ORDER BY gpr.createdAt DESC
   `;
   db.query(query, (err, results) => {
     if (err) return callback(err);
     callback(null, results);
   });
 };
+
 
 
 
@@ -58,6 +60,19 @@ exports.insertGatePassRequest = (data, callback) => {
   const values = [name, roll, department, reason, departureTime, returnTime, status];
 
   db.query(query, values, (err, result) => {
+    if (err) return callback(err);
+    callback(null, result);
+  });
+};
+// gatePassModel.js
+exports.insertGatePassRequest = (data, callback) => {
+  const { student_id, name, roll, department, reason, departureTime, returnTime } = data;
+  const query = `
+    INSERT INTO gate_pass_requests
+      (student_id, name, roll, department, reason, departureTime, returnTime, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending')
+  `;
+  db.query(query, [student_id, name, roll, department, reason, departureTime, returnTime], (err, result) => {
     if (err) return callback(err);
     callback(null, result);
   });

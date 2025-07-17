@@ -92,3 +92,17 @@ exports.requestGatePass = (req, res) => {
     res.json({ message: 'Gate pass request submitted', id: result.insertId });
   });
 };
+// studentController.js
+exports.getStudentRequests = (req, res) => {
+  const studentId = req.user.id;
+  const query = `
+    SELECT * FROM gate_pass_requests
+    WHERE student_id = ?
+    ORDER BY createdAt DESC
+  `;
+  db.query(query, [studentId], (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results);
+  });
+};
+

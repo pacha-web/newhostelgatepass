@@ -5,6 +5,7 @@ const router = express.Router();
 const db = require('../models/db');
 // Add at the top along with other imports
 const studentController = require('../controllers/studentController');
+const authenticate = require('../middleware/authenticate');
 
 // Add this after existing routes
 router.post('/login', studentController.loginStudent);
@@ -68,4 +69,11 @@ router.delete('/students/:id', (req, res) => {
 
 router.post('/requests', studentController.requestGatePass);
 
+
+// 👇 Add this BEFORE exporting the router
+router.get('/my-requests', authenticate, studentController.getStudentRequests);
+
+
+
 module.exports = router;
+
