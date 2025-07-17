@@ -28,9 +28,14 @@ class _RequestedGatePassState extends State<RequestedGatePass> {
           _requests = data.map((item) => {
             'id': item['id'],
             'studentName': item['name'],
+            'roll': item['roll'],
+            'department': item['department'],
             'reason': item['reason'],
-            'date': item['createdAt'].substring(0, 10),
+            'departureTime': item['departureTime'],
+            'returnTime': item['returnTime'],
+            'createdAt': item['createdAt'],
             'status': item['status'],
+            'profileImage': item['profileImage'], // Important!
           }).toList();
           _isLoading = false;
         });
@@ -92,13 +97,48 @@ class _RequestedGatePassState extends State<RequestedGatePass> {
                       elevation: 3,
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: request['profileImage'] != null
+                              ? NetworkImage("http://192.168.13.144:5000${request['profileImage']}")
+                              : null,
+                          child: request['profileImage'] == null
+                              ? const Icon(Icons.person)
+                              : null,
+                        ),
                         title: Text(request['studentName']),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Text("Roll No: ${request['roll']}"),
+                            Text("Department: ${request['department']}"),
                             Text("Reason: ${request['reason']}"),
-                            Text("Date: ${request['date']}"),
-                            Text("Status: ${request['status']}"),
+                            Text("Departure: ${request['departureTime']}"),
+                            Text("Return: ${request['returnTime']}"),
+                            Text("Date: ${request['createdAt'].substring(0, 10)}"),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Text("Status: "),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: request['status'] == 'Approved'
+                                        ? Colors.green
+                                        : request['status'] == 'Rejected'
+                                            ? Colors.red
+                                            : Colors.orange,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    request['status'],
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                         trailing: request['status'] == 'Pending'
@@ -115,15 +155,7 @@ class _RequestedGatePassState extends State<RequestedGatePass> {
                                   ),
                                 ],
                               )
-                            : Text(
-                                request['status'],
-                                style: TextStyle(
-                                  color: request['status'] == 'Approved'
-                                      ? Colors.green
-                                      : Colors.red,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                            : const SizedBox.shrink(),
                       ),
                     );
                   },

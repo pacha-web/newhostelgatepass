@@ -1,13 +1,23 @@
 const db = require('./db');
 
 // Get all gate pass requests
+// Get all gate pass requests with student details
 exports.getAllRequests = (callback) => {
-  const query = 'SELECT * FROM gate_pass_requests';
+  const query = `
+    SELECT 
+      gpr.id, gpr.name AS studentName, gpr.roll, gpr.department, gpr.reason,
+      gpr.departureTime, gpr.returnTime, gpr.status, gpr.createdAt,
+      s.profileImage
+    FROM gate_pass_requests gpr
+    JOIN students s ON gpr.roll = s.roll
+  `;
   db.query(query, (err, results) => {
     if (err) return callback(err);
     callback(null, results);
   });
 };
+
+
 
 // Update status
 exports.updateGatePassStatus = (id, status, callback) => {
