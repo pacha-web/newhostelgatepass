@@ -77,7 +77,11 @@ exports.loginStudent = (req, res) => {
     const student = results[0];
     delete student.password; // Remove sensitive info before sending
 
-    res.status(200).json({ message: 'Login successful', student });
+    const jwt = require('jsonwebtoken');
+const token = jwt.sign({ id: student.id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+res.status(200).json({ message: 'Login successful', student, token });
+
   });
 };
 const model = require('../models/gatePassModel');

@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const Student = require("../models/studentModel");
+const db = require("../models/db");
 
 const authenticate = async (req, res, next) => {
   try {
@@ -8,15 +8,22 @@ const authenticate = async (req, res, next) => {
       return res.status(401).json({ message: "No token provided" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const student = await Student.findById(decoded.id);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET); // Must contain student.id
 
-    if (!student) {
-      return res.status(401).json({ message: "Student not found" });
-    }
+    const query = "SELECT * FROM students WHERE id = ?";
+    db.query(query, [decoded.id], (err, results) => {
+      if (err) {
+        console.error("DB error:", err);
+        return res.status(500).json({ message: "DB error" });
+      }
 
-    req.user = student; // 🔴 This is important
-    next();
+      if (results.length === 0) {
+        return res.status(401).json({ message: "Student not found" });
+      }
+
+      req.user = results[0]; // ✅ Now req.user.id will work
+      next();
+    });
   } catch (err) {
     return res.status(401).json({ message: "Unauthorized", error: err.message });
   }

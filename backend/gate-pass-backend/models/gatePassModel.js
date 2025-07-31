@@ -69,7 +69,7 @@ exports.insertGatePassRequest = (data, callback) => {
   const { student_id, name, roll, department, reason, departureTime, returnTime } = data;
   const query = `
     INSERT INTO gate_pass_requests
-      (student_id, name, roll, department, reason, departureTime, returnTime, status)
+      (id, name, roll, department, reason, departureTime, returnTime, status)
     VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending')
   `;
   db.query(query, [student_id, name, roll, department, reason, departureTime, returnTime], (err, result) => {

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:qr_flutter/qr_flutter.dart';
 import 'dart:convert';
 
 class ViewRequests extends StatefulWidget {
   const ViewRequests({super.key});
+
   @override
   State<ViewRequests> createState() => _ViewRequestsState();
 }
@@ -25,7 +25,7 @@ class _ViewRequestsState extends State<ViewRequests> {
       final response = await http.get(
         url,
         headers: {
-          'Authorization': 'Bearer YOUR_TOKEN', // remove if not using auth
+          'Authorization': 'Bearer YOUR_TOKEN', // replace or remove if unused
         },
       );
 
@@ -59,6 +59,35 @@ class _ViewRequestsState extends State<ViewRequests> {
     }
   }
 
+  Widget buildStatusMessage(String status) {
+    if (status == 'Approved') {
+      return const Text(
+        '✅ Your gate pass has been accepted. Please show this message at the gate.',
+        style: TextStyle(fontSize: 14, color: Colors.green),
+      );
+    } else if (status == 'Rejected') {
+      return const Text(
+        '❌ Your gate pass request was rejected by the admin.',
+        style: TextStyle(fontSize: 14, color: Colors.red),
+      );
+    } else {
+      return const Text(
+        '⏳ Your request is under review.',
+        style: TextStyle(fontSize: 14, color: Colors.orange),
+      );
+    }
+  }
+
+  Widget buildDetailRow(String label, String? value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Text(
+        "$label: ${value ?? 'N/A'}",
+        style: const TextStyle(fontSize: 15),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,10 +116,10 @@ class _ViewRequestsState extends State<ViewRequests> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Reason: ${req['reason'] ?? 'N/A'}',
-                              style: const TextStyle(fontSize: 16),
-                            ),
+                            buildDetailRow("Reason", req['reason']),
+                            buildDetailRow("Departure Time", req['departureTime']),
+                            buildDetailRow("Return Time", req['returnTime']),
+                            buildDetailRow("Date Requested", req['createdAt']?.substring(0, 10)),
                             const SizedBox(height: 8),
                             Text(
                               'Status: $status',
@@ -101,48 +130,7 @@ class _ViewRequestsState extends State<ViewRequests> {
                               ),
                             ),
                             const SizedBox(height: 12),
-
-                            // Approved – QR Code
-                            if (status == 'Approved') ...[
-                              Center(
-                                child: QrImageView(
-                                  data: jsonEncode({
-                                    'id': req['id'],
-                                    'name': req['name'],
-                                    'roll': req['roll'],
-                                    'departure': req['departureTime'],
-                                    'return': req['returnTime'],
-                                    'issued': req['createdAt']
-                                  }),
-                                  version: QrVersions.auto,
-                                  size: 200,
-                                  backgroundColor: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              const Center(
-                                child: Text(
-                                  'Show this QR code at the gate.',
-                                  style: TextStyle(fontSize: 14),
-                                ),
-                              ),
-                            ]
-
-                            // Rejected – Message
-                            else if (status == 'Rejected') ...[
-                              const Text(
-                                '❌ Your gate pass request was rejected by the admin.',
-                                style: TextStyle(fontSize: 14, color: Colors.red),
-                              ),
-                            ]
-
-                            // Pending – Info
-                            else ...[
-                              const Text(
-                                '⏳ Your request is under review.',
-                                style: TextStyle(fontSize: 14),
-                              ),
-                            ],
+                            buildStatusMessage(status),
                           ],
                         ),
                       ),
